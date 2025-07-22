@@ -4,7 +4,7 @@
     { "prompt": "a kid befriends a friendly tiger cub, pixar style", "text": "Behind the waterfall, {child_name} met a playful tiger cub, and they became the best of friends." }
   ],
   "space": [
-    { "prompt": "a kid is wearing an astronaut costume, pixar style", "text": "Far away, past the moon and the stars, {child_name} zoomed through the cosmos in a rocket that looked like candy." },
+    { "prompt": "a kid is wearing an astronaut suit, pixar style", "text": "Far away, past the moon and the stars, {child_name} zoomed through the cosmos in a rocket that looked like candy." },
     { "prompt": "a kid is walking on the moon with an indian flag on hand, pixar style", "text": "On a strange, new planet, {child_name} took a walk with a friendly robot who beeped and booped with joy." }
   ]
 } 
