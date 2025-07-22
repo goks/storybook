@@ -40,8 +40,8 @@ async function generateImage(prompt: string, modelVersion: string): Promise<{byt
 }
 
 export async function POST(request: Request) {
-  const supabaseCookieStore = await cookies()
-  const supabase = createRouteHandlerClient({ cookies: async () => supabaseCookieStore })
+  // Pass the cookies helper directly as expected by the Supabase client.
+  const supabase = createRouteHandlerClient({ cookies })
   const { data: { session } } = await supabase.auth.getSession()
   if (!session) return new NextResponse('Unauthorized', { status: 401 })
 

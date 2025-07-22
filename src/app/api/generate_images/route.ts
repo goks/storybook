@@ -39,8 +39,8 @@ async function createPredictionWithRetry(model: string, version: string, input: 
 }
 
 export async function POST(request: Request) {
-  const supabaseCookieStore = await cookies()
-  const supabase = createRouteHandlerClient({ cookies: async () => supabaseCookieStore })
+  // Pass the `cookies` helper directly – the client expects the function, not a wrapped promise.
+  const supabase = createRouteHandlerClient({ cookies })
   const { data: { session } } = await supabase.auth.getSession()
   if (!session) return new NextResponse('Unauthorized', { status: 401 })
 

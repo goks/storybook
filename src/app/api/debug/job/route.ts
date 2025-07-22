@@ -9,8 +9,8 @@ export async function GET(request: Request) {
     return new NextResponse('Not found', { status: 404 })
   }
 
-  const supabaseCookieStore = await cookies()
-  const supabase = createRouteHandlerClient({ cookies: async () => supabaseCookieStore })
+  // Use the cookies helper directly when creating the Supabase client
+  const supabase = createRouteHandlerClient({ cookies })
   const { data: { session } } = await supabase.auth.getSession()
   if (!session) return new NextResponse('Unauthorized', { status: 401 })
 
