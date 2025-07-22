@@ -9,7 +9,8 @@ export async function GET(request: Request) {
     return new NextResponse('Not found', { status: 404 })
   }
 
-  const supabase = createRouteHandlerClient({ cookies })
+  const supabaseCookieStore = await cookies()
+  const supabase = createRouteHandlerClient({ cookies: async () => supabaseCookieStore })
   const { data: { session } } = await supabase.auth.getSession()
   if (!session) return new NextResponse('Unauthorized', { status: 401 })
 
@@ -40,8 +41,10 @@ export async function GET(request: Request) {
       latestJob: latestJob || null,
       allJobsForKid: allJobsForKid || [],
     })
-  } catch (error: any) {
-    console.error('[DEBUG] Error fetching job data:', error)
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.error('[DEBUG] Error fetching job data:', error.message)
+    }
     return new NextResponse('Internal Server Error', { status: 500 })
   }
 } 

@@ -15,7 +15,8 @@ async function fetchImageAsBuffer(url: string): Promise<Buffer> {
 
 export async function POST(request: Request) {
   try {
-    const supabase = createRouteHandlerClient({ cookies })
+    const supabaseCookieStore = await cookies()
+    const supabase = createRouteHandlerClient({ cookies: async () => supabaseCookieStore })
     const { data: { session } } = await supabase.auth.getSession()
 
     if (!session) {
@@ -118,9 +119,9 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json({ jobId: job.id })
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Training API error:', error)
-    const errorMessage = error.response?.data?.detail || 'Internal Server Error'
-    return new NextResponse(errorMessage, { status: 500 })
+    const message = error instanceof Error ? error.message : 'Internal Server Error'
+    return new NextResponse(message, { status: 500 })
   }
 } 

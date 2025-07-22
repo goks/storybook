@@ -8,6 +8,8 @@ export const replicate = new Replicate({
   auth: process.env.REPLICATE_API_TOKEN!,
 })
 
+type ReplicateError = Error & { response?: { status: number } }
+
 /**
  * Ensures the destination model repository exists on Replicate.
  * Creates it if it doesn't.
@@ -19,9 +21,9 @@ export async function ensureRepo() {
   try {
     // Check if the model repository exists
     await replicate.models.get(owner, name)
-  } catch (error: any) {
+  } catch (error: unknown) {
     // If it doesn't exist (404), create it
-    if (error.response?.status === 404) {
+    if (error instanceof Error && (error as ReplicateError).response?.status === 404) {
       await replicate.models.create(owner, name, {
         visibility: 'private',
         hardware: 'gpu-h100',

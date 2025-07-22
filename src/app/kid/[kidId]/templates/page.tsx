@@ -20,9 +20,14 @@ async function getKidData(kidId: string) {
   return kid
 }
 
-export default async function TemplatePage({ params }: { params: { kidId: string } }) {
-  const kid = await getKidData(params.kidId)
-  
+export default async function TemplatePage({
+  params,
+}: {
+  params: Promise<{ kidId: string }>
+}) {
+  const { kidId } = await params
+  const kid = await getKidData(kidId)
+
   if (!kid) {
     redirect('/dashboard')
   }
@@ -35,7 +40,7 @@ export default async function TemplatePage({ params }: { params: { kidId: string
             Choose a Story for {kid.name}
           </h1>
           <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
-            Select an adventure and we'll create the illustrations!
+            Select an adventure and we&apos;ll create the illustrations!
           </p>
           <TemplateSelector kidId={kid.id} />
         </div>

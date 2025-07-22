@@ -2,12 +2,12 @@ import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 import { replicate } from '@/lib/replicate'
-import type { Training } from 'replicate'
 
 export const dynamic = 'force-dynamic'
 
 export async function GET(request: Request) {
-  const supabase = createRouteHandlerClient({ cookies })
+  const supabaseCookieStore = await cookies()
+  const supabase = createRouteHandlerClient({ cookies: async () => supabaseCookieStore })
   const {
     data: { session },
   } = await supabase.auth.getSession()
@@ -67,9 +67,9 @@ export async function GET(request: Request) {
       status: updatedStatus,
       progressSeconds: metrics?.train_time_in_seconds || 0,
     })
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Polling error:', error)
-    const errorMessage = error.response?.data?.detail || 'Internal Server Error'
-    return new NextResponse(errorMessage, { status: 500 })
+    const message = error instanceof Error ? error.message : 'Internal Server Error'
+    return new NextResponse(message, { status: 500 })
   }
 } 

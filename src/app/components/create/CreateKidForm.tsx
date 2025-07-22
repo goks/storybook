@@ -2,7 +2,6 @@
 
 import { createBrowserSupabaseClient } from '@/lib/supabase/client'
 import { useState, useRef } from 'react'
-import { useRouter } from 'next/navigation'
 import TrainingStatus from './TrainingStatus'
 
 interface CreateKidFormProps {

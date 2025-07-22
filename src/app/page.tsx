@@ -7,8 +7,9 @@ export const dynamic = 'force-dynamic'
 export default async function Home({
   searchParams,
 }: {
-  searchParams: { error?: string }
+  searchParams: Promise<{ error?: string }>
 }) {
+  const { error } = await searchParams
   const supabase = createServerSupabaseClient()
   const { data: { session } } = await supabase.auth.getSession()
 
@@ -27,7 +28,7 @@ export default async function Home({
             Sign in to get started
           </p>
         </div>
-        {searchParams.error && (
+        {error && (
           <div className="rounded-md bg-red-50 p-4">
             <div className="flex">
               <div className="ml-3">
@@ -35,7 +36,7 @@ export default async function Home({
                   Authentication Error
                 </h3>
                 <div className="mt-2 text-sm text-red-700">
-                  {decodeURIComponent(searchParams.error)}
+                  {decodeURIComponent(error)}
                 </div>
               </div>
             </div>

@@ -6,33 +6,41 @@ import storyTemplates from '@/lib/storyTemplates.json'
 
 export const dynamic = 'force-dynamic'
 
+type Prediction = {
+  id: string;
+  status: 'succeeded' | 'failed' | 'canceled' | 'starting' | 'processing';
+  output?: string[];
+}
+
+type ReplicateError = Error & { response?: { status: number } }
 // Helper function to poll for prediction completion
-async function pollPrediction(predictionId: string): Promise<any> {
-  let prediction
+async function pollPrediction(predictionId: string): Promise<Prediction> {
+  let prediction: Prediction
   do {
     await new Promise(resolve => setTimeout(resolve, 1000)) // Wait 1 second between polls
-    prediction = await replicate.predictions.get(predictionId)
+    prediction = await replicate.predictions.get(predictionId) as Prediction
   } while (prediction.status !== 'succeeded' && prediction.status !== 'failed' && prediction.status !== 'canceled')
   return prediction
 }
 
-async function createPredictionWithRetry(model: string, version: string, input: object): Promise<any> {
+async function createPredictionWithRetry(model: string, version: string, input: { prompt: string; lora_scale: number }): Promise<Prediction> {
   try {
-    return await replicate.predictions.create({ model, version, input });
-  } catch (error: any) {
-    if (error.response && error.response.status >= 500) {
+    return await replicate.predictions.create({ model, version, input }) as Prediction;
+  } catch (error: unknown) {
+    if (error instanceof Error && (error as ReplicateError).response && (error as ReplicateError).response!.status >= 500) {
       if (process.env.NODE_ENV !== 'production') {
         console.log('[DEBUG] Replicate returned 5xx, retrying once...');
       }
       await new Promise(resolve => setTimeout(resolve, 1000));
-      return await replicate.predictions.create({ model, version, input });
+      return await replicate.predictions.create({ model, version, input }) as Prediction;
     }
     throw error;
   }
 }
 
 export async function POST(request: Request) {
-  const supabase = createRouteHandlerClient({ cookies })
+  const supabaseCookieStore = await cookies()
+  const supabase = createRouteHandlerClient({ cookies: async () => supabaseCookieStore })
   const { data: { session } } = await supabase.auth.getSession()
   if (!session) return new NextResponse('Unauthorized', { status: 401 })
 
@@ -85,7 +93,10 @@ export async function POST(request: Request) {
         throw new Error(`Prediction failed for prompt: ${fullPrompt}`)
       }
       
-      const imageUrl = completedPrediction.output[0]
+      const imageUrl = completedPrediction.output?.[0]
+      if (!imageUrl) {
+        throw new Error(`Image URL not found in prediction output for prompt: ${fullPrompt}`)
+      }
       if (process.env.NODE_ENV !== 'production') {
         console.log(`[DEBUG] Got image URL: ${imageUrl}`)
       }
@@ -97,8 +108,9 @@ export async function POST(request: Request) {
     const finalImages = images.slice(0, template.length)
     return NextResponse.json({ images: finalImages })
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Image generation error:', error)
-    return new NextResponse(error.message || 'Internal Server Error', { status: 500 })
+    const message = error instanceof Error ? error.message : 'Internal Server Error'
+    return new NextResponse(message, { status: 500 })
   }
 } 

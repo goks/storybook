@@ -4,12 +4,8 @@ import { NextResponse } from 'next/server'
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib'
 import { replicate } from '@/lib/replicate'
 // import storyTemplate from '@/lib/storyTemplate.json' - Removed static import
-import type { Model } from 'replicate'
 
 export const dynamic = 'force-dynamic'
-
-type ModelIdentifier = `${string}/${string}`
-type VersionIdentifier = `${ModelIdentifier}:${string}`
 
 async function generateImage(prompt: string, modelVersion: string): Promise<{bytes: Buffer, type: 'png' | 'jpeg'}> {
   const identifier = modelVersion as `${string}/${string}:${string}`
@@ -44,7 +40,8 @@ async function generateImage(prompt: string, modelVersion: string): Promise<{byt
 }
 
 export async function POST(request: Request) {
-  const supabase = createRouteHandlerClient({ cookies })
+  const supabaseCookieStore = await cookies()
+  const supabase = createRouteHandlerClient({ cookies: async () => supabaseCookieStore })
   const { data: { session } } = await supabase.auth.getSession()
   if (!session) return new NextResponse('Unauthorized', { status: 401 })
 
@@ -149,10 +146,10 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ pdfUrl: publicUrl })
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Generation error:', error)
     await supabase.from('jobs').update({ status: 'failed' }).eq('kid_id', kidId)
-    const errorMessage = error.response?.data?.detail || 'Internal Server Error'
-    return new NextResponse(errorMessage, { status: 500 })
+    const message = error instanceof Error ? error.message : 'Internal Server Error'
+    return new NextResponse(message, { status: 500 })
   }
 } 

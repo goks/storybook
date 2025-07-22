@@ -3,6 +3,7 @@
 import { Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import storyTemplates from '@/lib/storyTemplates.json'
+import Image from 'next/image'
 
 function ResultContent() {
   const searchParams = useSearchParams()
@@ -24,11 +25,15 @@ function ResultContent() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {uniqueImageUrls.map((url, index) => (
             <div key={url} className="bg-white dark:bg-gray-800 shadow-lg rounded-lg overflow-hidden">
-              <img
-                src={url}
-                alt={`Storybook page ${index + 1}`}
-                className="w-full h-auto object-contain"
-              />
+              <div className="relative w-full h-96">
+                <Image
+                  src={url}
+                  alt={`Storybook page ${index + 1}`}
+                  fill={true}
+                  style={{ objectFit: 'contain' }}
+                  className="w-full h-auto"
+                />
+              </div>
               <p className="p-6 text-gray-700 dark:text-gray-300">
                 {templatePages[index]?.text || `Page ${index + 1}`}
               </p>
