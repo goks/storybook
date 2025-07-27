@@ -40,8 +40,13 @@ async function generateImage(prompt: string, modelVersion: string): Promise<{byt
 }
 
 export async function POST(request: Request) {
+<<<<<<< HEAD
   const supabaseCookieStore = await cookies()
   const supabase = createRouteHandlerClient({ cookies: async () => supabaseCookieStore })
+=======
+  // Pass the cookies helper directly as expected by the Supabase client.
+  const supabase = createRouteHandlerClient({ cookies })
+>>>>>>> 3adfff723705dffdb8be6b29a862d1ac03346e1b
   const { data: { session } } = await supabase.auth.getSession()
   if (!session) return new NextResponse('Unauthorized', { status: 401 })
 
@@ -97,6 +102,7 @@ export async function POST(request: Request) {
     const { default: storyTemplates } = await import('@/lib/storyTemplates.json')
     const storyTemplate = storyTemplates[templateName as keyof typeof storyTemplates]
 
+<<<<<<< HEAD
     // Collect image URLs for results page
     const imageUrls: string[] = [];
     for (const pageData of storyTemplate) {
@@ -111,21 +117,41 @@ export async function POST(request: Request) {
       }
       // ...existing PDF logic...
       const { bytes: imageBytes, type: imageType } = await generateImage(prompt, job.model_version)
+=======
+    for (const pageData of storyTemplate) {
+      const text = pageData.text.replace('{child_name}', childName)
+      const prompt = `storybook illustration of ${text}, featuring a photo of ${job.trigger_word}`
+      
+      const { bytes: imageBytes, type: imageType } = await generateImage(prompt, job.model_version)
+      
+>>>>>>> 3adfff723705dffdb8be6b29a862d1ac03346e1b
       let image
       if (imageType === 'png') {
         image = await pdfDoc.embedPng(imageBytes)
       } else {
         image = await pdfDoc.embedJpg(imageBytes)
       }
+<<<<<<< HEAD
       const page = pdfDoc.addPage()
       const { width, height } = page.getSize()
       const imageDims = image.scale(0.5)
+=======
+
+      const page = pdfDoc.addPage()
+      const { width, height } = page.getSize()
+      const imageDims = image.scale(0.5)
+
+>>>>>>> 3adfff723705dffdb8be6b29a862d1ac03346e1b
       page.drawImage(image, {
         x: (width - imageDims.width) / 2,
         y: height - imageDims.height - 50,
         width: imageDims.width,
         height: imageDims.height,
       })
+<<<<<<< HEAD
+=======
+      
+>>>>>>> 3adfff723705dffdb8be6b29a862d1ac03346e1b
       page.drawText(text, {
         x: 50,
         y: 100,
@@ -135,6 +161,7 @@ export async function POST(request: Request) {
         maxWidth: width - 100,
       })
     }
+<<<<<<< HEAD
     const pdfBytes = await pdfDoc.save()
     const { error: uploadError } = await supabase.storage
       .from('books')
@@ -145,6 +172,23 @@ export async function POST(request: Request) {
     await supabase.from('jobs').update({ status: 'completed' }).eq('kid_id', kidId)
     // Return both PDF and image URLs for results page
     return NextResponse.json({ pdfUrl: publicUrl, imageUrls })
+=======
+    
+    const pdfBytes = await pdfDoc.save()
+    
+    const { error: uploadError } = await supabase.storage
+      .from('books')
+      .upload(`${kidId}.pdf`, pdfBytes, { contentType: 'application/pdf', upsert: true })
+
+    if (uploadError) throw uploadError
+    
+    const { data: { publicUrl } } = supabase.storage.from('books').getPublicUrl(`${kidId}.pdf`)
+
+    await supabase.from('books').insert({ kid_id: kidId, pdf_url: publicUrl, status: 'completed' })
+    await supabase.from('jobs').update({ status: 'completed' }).eq('kid_id', kidId)
+
+    return NextResponse.json({ pdfUrl: publicUrl })
+>>>>>>> 3adfff723705dffdb8be6b29a862d1ac03346e1b
 
   } catch (error: unknown) {
     console.error('Generation error:', error)

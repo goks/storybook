@@ -15,8 +15,13 @@ async function fetchImageAsBuffer(url: string): Promise<Buffer> {
 
 export async function POST(request: Request) {
   try {
+<<<<<<< HEAD
     const supabaseCookieStore = await cookies()
     const supabase = createRouteHandlerClient({ cookies: async () => supabaseCookieStore })
+=======
+    // Use the cookies helper directly when creating the Supabase client
+    const supabase = createRouteHandlerClient({ cookies })
+>>>>>>> 3adfff723705dffdb8be6b29a862d1ac03346e1b
     const { data: { session } } = await supabase.auth.getSession()
 
     if (!session) {

@@ -1,6 +1,12 @@
+<<<<<<< HEAD
 "use client"
 
 import { createClient } from '@/lib/supabase/client'
+=======
+'use client'
+
+import { createBrowserSupabaseClient } from '@/lib/supabase/client'
+>>>>>>> 3adfff723705dffdb8be6b29a862d1ac03346e1b
 import { useState, useRef } from 'react'
 import TrainingStatus from './TrainingStatus'
 
@@ -8,7 +14,10 @@ interface CreateKidFormProps {
   userId: string
 }
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> 3adfff723705dffdb8be6b29a862d1ac03346e1b
 export default function CreateKidForm({ userId }: CreateKidFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -23,15 +32,24 @@ export default function CreateKidForm({ userId }: CreateKidFormProps) {
     try {
       const formData = new FormData(e.currentTarget)
       const files = Array.from(formData.getAll('images')) as File[]
+<<<<<<< HEAD
 
+=======
+      
+>>>>>>> 3adfff723705dffdb8be6b29a862d1ac03346e1b
       if (files.length < 8 || files.length > 12) {
         throw new Error('Please upload between 8 and 12 images')
       }
 
+<<<<<<< HEAD
       // Create a client instance for Supabase
       const supabase = createClient()
 
       // Create kid record in Supabase
+=======
+      // Create kid record in Supabase
+      const supabase = createBrowserSupabaseClient()
+>>>>>>> 3adfff723705dffdb8be6b29a862d1ac03346e1b
       const { data: kid, error: kidError } = await supabase
         .from('kids')
         .insert({
@@ -113,7 +131,11 @@ export default function CreateKidForm({ userId }: CreateKidFormProps) {
             required
             className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-300 shadow-sm focus:border-black dark:focus:border-white focus:outline-none focus:ring-black dark:focus:ring-white sm:text-sm"
           />
+<<<<<<< HEAD
         </div> 
+=======
+        </div>
+>>>>>>> 3adfff723705dffdb8be6b29a862d1ac03346e1b
 
         <div>
           <label htmlFor="gender" className="block text-sm font-medium text-gray-700 dark:text-gray-200">

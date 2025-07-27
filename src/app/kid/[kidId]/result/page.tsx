@@ -10,11 +10,14 @@ function ResultContent() {
   const imageUrls = searchParams.getAll('imageUrl')
   const templateName = searchParams.get('template')
 
+<<<<<<< HEAD
   // Debug log: show all received image URLs
   if (typeof window !== 'undefined') {
     console.log('Result page imageUrls:', imageUrls)
   }
 
+=======
+>>>>>>> 3adfff723705dffdb8be6b29a862d1ac03346e1b
   // Deduplicate and slice to the first 2 URLs
   const uniqueImageUrls = [...new Set(imageUrls)].slice(0, 2)
 

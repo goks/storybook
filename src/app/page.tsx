@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 import { createClient } from '@/lib/supabase/server'
+=======
+import { createServerSupabaseClient } from '@/lib/supabase/server'
+>>>>>>> 3adfff723705dffdb8be6b29a862d1ac03346e1b
 import { redirect } from 'next/navigation'
 import SignInButton from './components/SignInButton'
 
@@ -7,6 +11,7 @@ export const dynamic = 'force-dynamic'
 export default async function Home({
   searchParams,
 }: {
+<<<<<<< HEAD
   searchParams: { error?: string }
 }) {
   const { error } = await searchParams
@@ -14,6 +19,15 @@ export default async function Home({
   const { data: { user } } = await supabase.auth.getUser()
 
   if (user) {
+=======
+  searchParams: Promise<{ error?: string }>
+}) {
+  const { error } = await searchParams
+  const supabase = createServerSupabaseClient()
+  const { data: { session } } = await supabase.auth.getSession()
+
+  if (session) {
+>>>>>>> 3adfff723705dffdb8be6b29a862d1ac03346e1b
     redirect('/dashboard')
   }
 

@@ -1,5 +1,10 @@
+<<<<<<< HEAD
 
 import { createClient } from '@/lib/supabase/server'
+=======
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
+import { cookies } from 'next/headers'
+>>>>>>> 3adfff723705dffdb8be6b29a862d1ac03346e1b
 import { NextResponse } from 'next/server'
 import { replicate } from '@/lib/replicate'
 import storyTemplates from '@/lib/storyTemplates.json'
@@ -39,9 +44,16 @@ async function createPredictionWithRetry(model: string, version: string, input: 
 }
 
 export async function POST(request: Request) {
+<<<<<<< HEAD
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return new NextResponse('Unauthorized', { status: 401 })
+=======
+  // Pass the `cookies` helper directly – the client expects the function, not a wrapped promise.
+  const supabase = createRouteHandlerClient({ cookies })
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session) return new NextResponse('Unauthorized', { status: 401 })
+>>>>>>> 3adfff723705dffdb8be6b29a862d1ac03346e1b
 
   const { kidId, templateName } = await request.json()
   if (!kidId || !templateName) {
@@ -112,4 +124,8 @@ export async function POST(request: Request) {
     const message = error instanceof Error ? error.message : 'Internal Server Error'
     return new NextResponse(message, { status: 500 })
   }
+<<<<<<< HEAD
 }
+=======
+} 
+>>>>>>> 3adfff723705dffdb8be6b29a862d1ac03346e1b

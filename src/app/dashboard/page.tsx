@@ -1,9 +1,16 @@
+<<<<<<< HEAD
+=======
+import { createServerSupabaseClient } from '@/lib/supabase/server'
+>>>>>>> 3adfff723705dffdb8be6b29a862d1ac03346e1b
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import SignOutButton from '../components/SignOutButton'
 import BookCard from '../components/BookCard'
 import KidCard from '../components/KidCard'
+<<<<<<< HEAD
 import { createClient } from '@/lib/supabase/server'
+=======
+>>>>>>> 3adfff723705dffdb8be6b29a862d1ac03346e1b
 
 export const dynamic = 'force-dynamic'
 
@@ -15,10 +22,17 @@ type CharacterStatus = {
 }
 
 export default async function Dashboard() {
+<<<<<<< HEAD
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) {
+=======
+  const supabase = createServerSupabaseClient()
+  const { data: { session } } = await supabase.auth.getSession()
+
+  if (!session) {
+>>>>>>> 3adfff723705dffdb8be6b29a862d1ac03346e1b
     redirect('/')
   }
 
@@ -29,7 +43,10 @@ export default async function Dashboard() {
     console.error('Error fetching character status:', error)
   }
 
+<<<<<<< HEAD
   
+=======
+>>>>>>> 3adfff723705dffdb8be6b29a862d1ac03346e1b
   const filteredCharacters = characters?.filter(
     (char: CharacterStatus) => char.job_status === 'ready' || char.job_status === 'completed'
   ) || []
@@ -44,7 +61,11 @@ export default async function Dashboard() {
             </div>
             <div className="flex items-center gap-4">
               <p className="text-sm text-gray-500 dark:text-gray-300">
+<<<<<<< HEAD
                 {user.email}
+=======
+                {session.user.email}
+>>>>>>> 3adfff723705dffdb8be6b29a862d1ac03346e1b
               </p>
               <Link
                 href="/create"

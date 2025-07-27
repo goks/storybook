@@ -1,7 +1,12 @@
 {
   "jungle": [
+<<<<<<< HEAD
     { "prompt": "A Pixar-style illustration of ca artoon kid with expressive eyes, wearing a colorful hoodie and shorts, standing on a grassy hilltop at sunrise. Next to them hovers Zazu, a chubby, blue-and-yellow magical parrot-like creature with stubby wings, big eyes, and shimmering feathers. The sky glows with dreamy pink, orange, and golden hues, with wisps of mist floating near the ground. Place both characters on the right-hand side, with open space on the left for speech bubbles. The mood is whimsical, peaceful, and full of early morning wonder."},
     { "prompt": "Pixar-style illustration a cartoon kid with bright eyes and colorful clothes, riding on the back of Zazu, a magical blue-and-yellow chubby parrot-like creature with glowing feathers and tiny wings. They fly joyfully above small floating islands with tiny dancing trees, miniature houses, and rainbow banners strung between clouds. The mid-morning sky is bright blue with soft, puffy clouds. Place both characters on the left-hand side, leaving the right for dialogue bubbles. A festive and adventurous tone.", "text": "A New Family" }
+=======
+    { "prompt": "a kid is walking through a lush jungle waterfall, pixar-style", "text": "Once, in a jungle so green it shimmered, a brave explorer named {child_name} discovered a secret waterfall." },
+    { "prompt": "a kid befriends a friendly tiger cub, pixar style", "text": "Behind the waterfall, {child_name} met a playful tiger cub, and they became the best of friends." }
+>>>>>>> 3adfff723705dffdb8be6b29a862d1ac03346e1b
   ],
   "space": [
     { "prompt": "a kid is wearing an astronaut suit, pixar style", "text": "Far away, past the moon and the stars, {child_name} zoomed through the cosmos in a rocket that looked like candy." },

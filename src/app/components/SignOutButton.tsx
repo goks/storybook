@@ -1,12 +1,20 @@
 'use client'
 
+<<<<<<< HEAD
 import { createClient } from '@/lib/supabase/client'
+=======
+import { createBrowserSupabaseClient } from '@/lib/supabase/client'
+>>>>>>> 3adfff723705dffdb8be6b29a862d1ac03346e1b
 import { useRouter } from 'next/navigation'
 
 export default function SignOutButton() {
   const router = useRouter()
   const handleSignOut = async () => {
+<<<<<<< HEAD
     const supabase = createClient()
+=======
+    const supabase = createBrowserSupabaseClient()
+>>>>>>> 3adfff723705dffdb8be6b29a862d1ac03346e1b
     await supabase.auth.signOut()
     router.refresh()
   }

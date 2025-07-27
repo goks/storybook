@@ -6,8 +6,13 @@ import { replicate } from '@/lib/replicate'
 export const dynamic = 'force-dynamic'
 
 export async function GET(request: Request) {
+<<<<<<< HEAD
   const supabaseCookieStore = await cookies()
   const supabase = createRouteHandlerClient({ cookies: async () => supabaseCookieStore })
+=======
+  // Use the cookies helper directly when creating the Supabase client
+  const supabase = createRouteHandlerClient({ cookies })
+>>>>>>> 3adfff723705dffdb8be6b29a862d1ac03346e1b
   const {
     data: { session },
   } = await supabase.auth.getSession()

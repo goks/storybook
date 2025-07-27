@@ -1,9 +1,17 @@
+<<<<<<< HEAD
 import { createClient } from '@/lib/supabase/server'
+=======
+import { createServerSupabaseClient } from '@/lib/supabase/server'
+>>>>>>> 3adfff723705dffdb8be6b29a862d1ac03346e1b
 import { redirect } from 'next/navigation'
 import CreateKidForm from '@/app/components/create/CreateKidForm'
 
 export default async function CreatePage() {
+<<<<<<< HEAD
   const supabase = await createClient()
+=======
+  const supabase = createServerSupabaseClient()
+>>>>>>> 3adfff723705dffdb8be6b29a862d1ac03346e1b
   const { data: { session } } = await supabase.auth.getSession()
 
   if (!session) {

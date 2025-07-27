@@ -26,6 +26,7 @@ export default function TemplateSelector({ kidId }: TemplateSelectorProps) {
       })
 
       if (!response.ok) {
+<<<<<<< HEAD
         // The API returns plain text for errors, so we use .text()
         const errorText = await response.text().catch(() => 'Image generation failed')
         throw new Error(errorText)
@@ -43,6 +44,18 @@ export default function TemplateSelector({ kidId }: TemplateSelectorProps) {
         alert('No images were generated. Please try again.')
         setLoadingTemplate(null)
       }
+=======
+        throw new Error('Image generation failed')
+      }
+
+      const { images } = await response.json()
+      
+      const queryParams = new URLSearchParams()
+      images.forEach((url: string) => queryParams.append('imageUrl', url))
+      
+      router.push(`/kid/${kidId}/result?template=${templateName}&${queryParams.toString()}`)
+
+>>>>>>> 3adfff723705dffdb8be6b29a862d1ac03346e1b
     } catch (error) {
       console.error('Failed to generate images:', error)
       alert('Something went wrong. Please try again.')

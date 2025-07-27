@@ -1,6 +1,10 @@
 'use client'
 
+<<<<<<< HEAD
 import { createClient } from '@/lib/supabase/client'
+=======
+import { createBrowserSupabaseClient } from '@/lib/supabase/client'
+>>>>>>> 3adfff723705dffdb8be6b29a862d1ac03346e1b
 import { useState } from 'react'
 
 export default function SignInButton() {
@@ -9,7 +13,11 @@ export default function SignInButton() {
   const handleSignIn = async () => {
     try {
       setIsLoading(true)
+<<<<<<< HEAD
       const supabase = createClient()
+=======
+      const supabase = createBrowserSupabaseClient()
+>>>>>>> 3adfff723705dffdb8be6b29a862d1ac03346e1b
       await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {

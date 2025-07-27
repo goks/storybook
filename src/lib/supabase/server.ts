@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 
 import { cookies } from 'next/headers'
@@ -36,3 +37,10 @@ export async function createClient() {
     }
   )
 }
+=======
+import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
+import { cookies } from 'next/headers'
+ 
+export const createServerSupabaseClient = () =>
+  createServerComponentClient({ cookies }) 
+>>>>>>> 3adfff723705dffdb8be6b29a862d1ac03346e1b

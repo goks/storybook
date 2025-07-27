@@ -1,12 +1,23 @@
+<<<<<<< HEAD
 import { createClient } from '@/lib/supabase/server'
+=======
+import { createServerSupabaseClient } from '@/lib/supabase/server'
+>>>>>>> 3adfff723705dffdb8be6b29a862d1ac03346e1b
 import { redirect } from 'next/navigation'
 import TemplateSelector from '@/app/components/kid/TemplateSelector'
 
 async function getKidData(kidId: string) {
+<<<<<<< HEAD
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) {
+=======
+  const supabase = createServerSupabaseClient()
+  const { data: { session } } = await supabase.auth.getSession()
+
+  if (!session) {
+>>>>>>> 3adfff723705dffdb8be6b29a862d1ac03346e1b
     return null
   }
 
@@ -14,7 +25,11 @@ async function getKidData(kidId: string) {
     .from('kids')
     .select('id, name')
     .eq('id', kidId)
+<<<<<<< HEAD
     .eq('user_id', user.id)
+=======
+    .eq('user_id', session.user.id)
+>>>>>>> 3adfff723705dffdb8be6b29a862d1ac03346e1b
     .single()
   
   return kid
@@ -23,11 +38,19 @@ async function getKidData(kidId: string) {
 export default async function TemplatePage({
   params,
 }: {
+<<<<<<< HEAD
   params: { kidId: string }
 }) {
   const { kidId } = await params
   const kid = await getKidData(kidId)
   
+=======
+  params: Promise<{ kidId: string }>
+}) {
+  const { kidId } = await params
+  const kid = await getKidData(kidId)
+
+>>>>>>> 3adfff723705dffdb8be6b29a862d1ac03346e1b
   if (!kid) {
     redirect('/dashboard')
   }

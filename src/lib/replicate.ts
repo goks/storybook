@@ -4,6 +4,7 @@ import Replicate from 'replicate'
 // from https://replicate.com/replicate/fast-flux-trainer
 export const REPLICATE_VERSION_ID = '8b10794665aed907bb98a1a5324cd1d3a8bea0e9b31e65210967fb9c9e2e08ed'
 
+<<<<<<< HEAD
 // --- Configuration ---
 const REPLICATE_API_TOKEN = process.env.REPLICATE_API_TOKEN;
 const REPLICATE_USERNAME = process.env.REPLICATE_USERNAME;
@@ -39,12 +40,20 @@ function isReplicateNotFoundError(error: unknown): error is ReplicateError {
     (error as { response: { status?: unknown } }).response.status === 404
   );
 }
+=======
+export const replicate = new Replicate({
+  auth: process.env.REPLICATE_API_TOKEN!,
+})
+
+type ReplicateError = Error & { response?: { status: number } }
+>>>>>>> 3adfff723705dffdb8be6b29a862d1ac03346e1b
 
 /**
  * Ensures the destination model repository exists on Replicate.
  * Creates it if it doesn't.
  */
 export async function ensureRepo() {
+<<<<<<< HEAD
   const repo = `${REPO_OWNER}/${REPO_NAME}`
   
   try {
@@ -54,6 +63,22 @@ export async function ensureRepo() {
     // If it doesn't exist (404), create it
     if (isReplicateNotFoundError(error)) {
       await replicate.models.create(REPO_OWNER, REPO_NAME, REPO_CONFIG)
+=======
+  const repo = `${process.env.REPLICATE_USERNAME}/child-book-faces`
+  const [owner, name] = repo.split('/')
+  
+  try {
+    // Check if the model repository exists
+    await replicate.models.get(owner, name)
+  } catch (error: unknown) {
+    // If it doesn't exist (404), create it
+    if (error instanceof Error && (error as ReplicateError).response?.status === 404) {
+      await replicate.models.create(owner, name, {
+        visibility: 'private',
+        hardware: 'gpu-h100',
+        description: 'Child book face models repository'
+      })
+>>>>>>> 3adfff723705dffdb8be6b29a862d1ac03346e1b
     } else {
       // Re-throw other errors
       console.error('Error checking or creating Replicate repo:', error)
@@ -61,4 +86,8 @@ export async function ensureRepo() {
     }
   }
   return repo
+<<<<<<< HEAD
 }
+=======
+} 
+>>>>>>> 3adfff723705dffdb8be6b29a862d1ac03346e1b
