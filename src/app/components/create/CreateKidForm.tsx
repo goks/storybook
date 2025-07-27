@@ -8,7 +8,6 @@ interface CreateKidFormProps {
   userId: string
 }
 
-
 export default function CreateKidForm({ userId }: CreateKidFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -23,7 +22,6 @@ export default function CreateKidForm({ userId }: CreateKidFormProps) {
     try {
       const formData = new FormData(e.currentTarget)
       const files = Array.from(formData.getAll('images')) as File[]
-
       if (files.length < 8 || files.length > 12) {
         throw new Error('Please upload between 8 and 12 images')
       }

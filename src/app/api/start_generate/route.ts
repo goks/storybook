@@ -1,155 +1,115 @@
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+
+import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
-import { PDFDocument, rgb, StandardFonts } from 'pdf-lib'
 import { replicate } from '@/lib/replicate'
-// import storyTemplate from '@/lib/storyTemplate.json' - Removed static import
+import storyTemplates from '@/lib/storyTemplates.json'
 
 export const dynamic = 'force-dynamic'
 
-async function generateImage(prompt: string, modelVersion: string): Promise<{bytes: Buffer, type: 'png' | 'jpeg'}> {
-  const identifier = modelVersion as `${string}/${string}:${string}`
-  const output = (await replicate.run(identifier, {
-    input: { prompt },
-  })) as string[]
+type Prediction = {
+  id: string;
+  status: 'succeeded' | 'failed' | 'canceled' | 'starting' | 'processing';
+  output?: string[];
+}
 
-  if (!output || !output[0]) {
-    throw new Error('Image generation failed to produce an output.')
+type ReplicateError = Error & { response?: { status: number } }
+// Helper function to poll for prediction completion
+async function pollPrediction(predictionId: string): Promise<Prediction> {
+  let prediction: Prediction
+  do {
+    await new Promise(resolve => setTimeout(resolve, 1000)) // Wait 1 second between polls
+    prediction = await replicate.predictions.get(predictionId) as Prediction
+  } while (prediction.status !== 'succeeded' && prediction.status !== 'failed' && prediction.status !== 'canceled')
+  return prediction
+}
+
+async function createPredictionWithRetry(model: string, version: string, input: { prompt: string; lora_scale: number }): Promise<Prediction> {
+  try {
+    return await replicate.predictions.create({ model, version, input }) as Prediction;
+  } catch (error: unknown) {
+    if (error instanceof Error && (error as ReplicateError).response && (error as ReplicateError).response!.status >= 500) {
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('[DEBUG] Replicate returned 5xx, retrying once...');
+      }
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      return await replicate.predictions.create({ model, version, input }) as Prediction;
+    }
+    throw error;
   }
-  
-  const imageUrl = output[0]
-  const response = await fetch(imageUrl, { headers: { Accept: 'image/png,*/*' } })
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch generated image: ${response.statusText}`)
-  }
-
-  const contentType = response.headers.get('content-type')
-  const arrayBuffer = await response.arrayBuffer()
-  const buffer = Buffer.from(arrayBuffer)
-
-  if (process.env.NODE_ENV !== 'production') {
-    console.log('[DEBUG] img content-type', contentType)
-    const buf = new Uint8Array(arrayBuffer)
-    console.log('[DEBUG] img first 8 bytes', buf.slice(0, 8))
-  }
-  
-  const imageType = contentType === 'image/png' ? 'png' : 'jpeg'
-
-  return { bytes: buffer, type: imageType }
 }
 
 export async function POST(request: Request) {
-  const supabaseCookieStore = await cookies()
-  const supabase = createRouteHandlerClient({ cookies: async () => supabaseCookieStore })
-  const { data: { session } } = await supabase.auth.getSession()
-  if (!session) return new NextResponse('Unauthorized', { status: 401 })
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return new NextResponse('Unauthorized', { status: 401 })
 
   const { kidId, templateName } = await request.json()
-  if (!kidId) return new NextResponse('Kid ID is required', { status: 400 })
-  if (!templateName) return new NextResponse('Template name is required', { status: 400 })
-
-  if (process.env.NODE_ENV !== 'production') {
-    console.log(`[DEBUG] Received request to generate book for kidId: ${kidId}`)
+  if (!kidId || !templateName) {
+    return new NextResponse('kidId and templateName are required', { status: 400 })
   }
 
   try {
-    const query = supabase
+    const { data: job, error: jobError } = await supabase
       .from('jobs')
-      .select('id, status, model_version, trigger_word')
+      .select('model_version, trigger_word')
       .eq('kid_id', kidId)
+      .eq('status', 'ready')
       .order('updated_at', { ascending: false })
       .limit(1)
-      
-    if (process.env.NODE_ENV !== 'production') {
-      console.log(`[DEBUG] Executing query for latest job:`, query)
-    }
+      .single()
 
-    const { data: job, error: jobError } = await query.single()
-
-    if (process.env.NODE_ENV !== 'production') {
-      console.log(`[DEBUG] Query result:`, {
-        jobExists: !!job,
-        rowCount: job ? 1 : 0,
-        job: job ? { id: job.id, status: job.status, model_version: job.model_version, trigger_word: job.trigger_word } : null,
-        error: jobError,
-      })
-    }
-    
     if (jobError || !job) {
-      if (jobError && jobError.code !== 'PGRST116') { // Ignore "exact one row" error for logging
-        console.error('[DEBUG] Supabase error fetching job:', jobError)
-      }
-      return new NextResponse('Ready job not found', { status: 404 })
+      return new NextResponse('Ready job not found for this kid', { status: 404 })
     }
-    if (job.status !== 'ready') {
-      return new NextResponse(`Job is not ready (status: ${job.status})`, { status: 400 })
+
+    const templates = storyTemplates as Record<string, { prompt: string, text: string }[]>
+    const template = templates[templateName]
+    if (!template) {
+      return new NextResponse('Template not found', { status: 404 })
     }
-    
-    await supabase.from('jobs').update({ status: 'generating' }).eq('kid_id', kidId)
-    
-    const { data: kid } = await supabase.from('kids').select('name').eq('id', kidId).single()
-    const childName = kid?.name || 'the child'
 
-    const pdfDoc = await PDFDocument.create()
-    const font = await pdfDoc.embedFont(StandardFonts.Helvetica)
-
-    const { default: storyTemplates } = await import('@/lib/storyTemplates.json')
-    const storyTemplate = storyTemplates[templateName as keyof typeof storyTemplates]
-
-    // Collect image URLs for results page
-    const imageUrls: string[] = [];
-    for (const pageData of storyTemplate) {
-      const text = pageData.text.replace('{child_name}', childName)
-      const prompt = `storybook illustration of ${text}, featuring a photo of ${job.trigger_word}`
-      // Generate image and get URL
-      const output = (await replicate.run(job.model_version as `${string}/${string}:${string}`, {
-        input: { prompt },
-      })) as string[];
-      if (output && output[0]) {
-        imageUrls.push(output[0]);
+    const imageGenerationPromises = template.map(async (page) => {
+      const fullPrompt = `${job.trigger_word}, ${page.prompt}`
+      
+      if (process.env.NODE_ENV !== 'production') {
+        console.log(`[DEBUG] Generating image with prompt: "${fullPrompt}" for model ${job.model_version}`)
       }
-      // ...existing PDF logic...
-      const { bytes: imageBytes, type: imageType } = await generateImage(prompt, job.model_version)
-      let image
-      if (imageType === 'png') {
-        image = await pdfDoc.embedPng(imageBytes)
-      } else {
-        image = await pdfDoc.embedJpg(imageBytes)
+      
+      const [ownerRepo, hash] = job.model_version.split(':')
+      
+      const prediction = await createPredictionWithRetry(
+        ownerRepo,
+        hash,
+        { 
+          prompt: fullPrompt,
+          lora_scale: 1.25
+        }
+      )
+      
+      const completedPrediction = await pollPrediction(prediction.id)
+
+      if (completedPrediction.status !== 'succeeded') {
+        throw new Error(`Prediction failed for prompt: ${fullPrompt}`)
       }
-      const page = pdfDoc.addPage()
-      const { width, height } = page.getSize()
-      const imageDims = image.scale(0.5)
-      page.drawImage(image, {
-        x: (width - imageDims.width) / 2,
-        y: height - imageDims.height - 50,
-        width: imageDims.width,
-        height: imageDims.height,
-      })
-      page.drawText(text, {
-        x: 50,
-        y: 100,
-        font,
-        size: 18,
-        color: rgb(0, 0, 0),
-        maxWidth: width - 100,
-      })
-    }
-    const pdfBytes = await pdfDoc.save()
-    const { error: uploadError } = await supabase.storage
-      .from('books')
-      .upload(`${kidId}.pdf`, pdfBytes, { contentType: 'application/pdf', upsert: true })
-    if (uploadError) throw uploadError
-    const { data: { publicUrl } } = supabase.storage.from('books').getPublicUrl(`${kidId}.pdf`)
-    await supabase.from('books').insert({ kid_id: kidId, pdf_url: publicUrl, status: 'completed' })
-    await supabase.from('jobs').update({ status: 'completed' }).eq('kid_id', kidId)
-    // Return both PDF and image URLs for results page
-    return NextResponse.json({ pdfUrl: publicUrl, imageUrls })
+      
+      const imageUrl = completedPrediction.output?.[0]
+      if (!imageUrl) {
+        throw new Error(`Image URL not found in prediction output for prompt: ${fullPrompt}`)
+      }
+      if (process.env.NODE_ENV !== 'production') {
+        console.log(`[DEBUG] Got image URL: ${imageUrl}`)
+      }
+      
+      return imageUrl
+    })
+
+    const images = await Promise.all(imageGenerationPromises)
+    const finalImages = images.slice(0, template.length)
+    return NextResponse.json({ images: finalImages })
 
   } catch (error: unknown) {
-    console.error('Generation error:', error)
-    await supabase.from('jobs').update({ status: 'failed' }).eq('kid_id', kidId)
+    console.error('Image generation error:', error)
     const message = error instanceof Error ? error.message : 'Internal Server Error'
     return new NextResponse(message, { status: 500 })
   }
-} 
+}
